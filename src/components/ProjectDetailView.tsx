@@ -142,17 +142,19 @@ export function ProjectDetailView({
             ))}
           </div>
 
-          <div className="mt-5 bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center gap-3 overflow-hidden">
+          <div className="mt-5 bg-blue-50 border border-blue-100 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 overflow-hidden">
             <span className="text-[13px] text-blue-800 font-medium shrink-0">🔗 Employee Link:</span>
-            <code className="text-xs text-blue-800 bg-white border border-blue-100 rounded px-2 py-1 truncate flex-1">
-              /update/{project.id}
-            </code>
-            <button 
-              onClick={copyEmployeeLink}
-              className="shrink-0 bg-primary text-white border-none rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer hover:bg-primary/90 flex items-center gap-1.5"
-            >
-              <Copy className="w-3 h-3" /> Copy
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto min-w-0 flex-1">
+              <code className="text-xs text-blue-800 bg-white border border-blue-100 rounded px-2 py-1.5 truncate flex-1 block">
+                /update/{project.id}
+              </code>
+              <button 
+                onClick={copyEmployeeLink}
+                className="shrink-0 bg-primary text-white border-none rounded-lg px-3 py-1.5 text-xs font-semibold cursor-pointer hover:bg-primary/90 flex items-center gap-1.5"
+              >
+                <Copy className="w-3 h-3" /> Copy
+              </button>
+            </div>
           </div>
         </div>
       </div>
