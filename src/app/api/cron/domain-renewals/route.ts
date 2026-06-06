@@ -4,8 +4,6 @@ import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 function daysUntil(dateStr: string) {
   const diff = new Date(dateStr).getTime() - new Date().getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -13,6 +11,7 @@ function daysUntil(dateStr: string) {
 
 export async function GET(request: Request) {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     // Validate cron request (optional, usually protected by a secret header in Vercel)
     const authHeader = request.headers.get('authorization');
     if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
