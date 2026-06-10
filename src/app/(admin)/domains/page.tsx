@@ -87,10 +87,10 @@ export default async function DomainsPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2.5 overflow-hidden">
-                    <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span className="truncate font-medium">
-                      {d.renewal_date ? new Date(d.renewal_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'No renewal date'}
-                    </span>
+                    <div className="text-sm text-gray-500 flex items-center gap-2">
+                      <Clock className="w-4 h-4" /> 
+                      {d.renewal_date ? new Date(d.renewal_date).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' }) : 'No renewal date'}
+                    </div>
                   </div>
                 </div>
 

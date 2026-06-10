@@ -27,7 +27,6 @@ export async function submitEmployeeUpdate(projectId: string, prevState: any, fo
   }
 
   // Handle checklist updates
-  // Form data will contain keys like 'task_completed_<task_id>' = 'on'
   const taskUpdates = [];
   for (const [key, value] of formData.entries()) {
     if (key.startsWith('task_completed_') && value === 'on') {
@@ -41,13 +40,51 @@ export async function submitEmployeeUpdate(projectId: string, prevState: any, fo
   }
 
   if (taskUpdates.length > 0) {
-    // Supabase upsert requires the full primary key, assuming 'id' is enough for update
     for (const update of taskUpdates) {
       await supabase
         .from('project_checklists')
         .update({ completed: true, completed_at: update.completed_at })
         .eq('id', update.id);
     }
+  }
+
+  // Fetch updated checklists to calculate auto-status
+  const { data: allChecklists } = await supabase.from('project_checklists').select('*').eq('project_id', projectId);
+  const { data: proj } = await supabase.from('projects').select('status').eq('id', projectId).single();
+  
+  let newStatus = proj?.status;
+  if (allChecklists && proj) {
+    const getGroup = (cat: string) => allChecklists.filter(c => c.category === cat);
+    const isDone = (tasks: any[]) => tasks.length > 0 && tasks.every(t => t.completed);
+    
+    const req = getGroup('Requirements');
+    const dev = getGroup('Development');
+    const test = getGroup('Testing');
+    const dep = getGroup('Deployment');
+
+    if (!isDone(req)) newStatus = 'Requirements';
+    else if (!isDone(dev)) newStatus = 'Development';
+    else if (!isDone(dep)) newStatus = 'Deployment';
+    else if (!isDone(test)) {
+      const testCompletedCount = test.filter(t => t.completed).length;
+      newStatus = testCompletedCount === 0 ? 'Review' : 'Testing';
+    } else newStatus = 'Completed';
+  }
+
+  // Update URLs and potentially status
+  const updates: any = {};
+  
+  const github_url = formData.get('github_url');
+  const preview_url = formData.get('preview_url');
+  const live_url = formData.get('live_url');
+  
+  if (github_url !== null) updates.github_url = github_url;
+  if (preview_url !== null) updates.preview_url = preview_url;
+  if (live_url !== null) updates.live_url = live_url;
+  if (newStatus && newStatus !== proj?.status) updates.status = newStatus;
+
+  if (Object.keys(updates).length > 0) {
+    await supabase.from('projects').update(updates).eq('id', projectId);
   }
 
   revalidatePath(`/update/${projectId}`);

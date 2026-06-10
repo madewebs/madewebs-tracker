@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { CircleProgress } from '@/components/CircleProgress';
 import { Plus } from 'lucide-react';
 
-const STATUSES = ["Requirements", "Development", "Testing", "Review", "Deployment", "Completed"];
+const STATUSES = ["Requirements", "Development", "Deployment", "Testing", "Review", "Completed"];
 
 function statusColor(s: string) {
   const map: Record<string, string> = {
@@ -77,7 +77,7 @@ export function ProjectList({ projects, checklists }: { projects: any[], checkli
                 <div className="flex-1 min-w-[160px]">
                   <div className="text-[15px] font-bold text-gray-900">{p.company_name}</div>
                   <div className="text-[13px] text-gray-500 mt-0.5">
-                    {p.plan} · {p.assigned_to || 'Unassigned'} {p.deadline ? `· Due ${new Date(p.deadline).toLocaleDateString()}` : ''}
+                    {p.plan} · {p.assigned_to || 'Unassigned'} {p.deadline ? `· Due ${new Date(p.deadline).toLocaleDateString('en-GB')}` : ''}
                   </div>
                 </div>
                 <div className="flex gap-2 flex-wrap items-center">

@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
-export function EmployeeUpdateForm({ projectId, groupedChecklists, assignedTo }: { projectId: string, groupedChecklists: Record<string, any[]>, assignedTo: string }) {
-  const submitWithId = submitEmployeeUpdate.bind(null, projectId);
+const CATEGORY_ORDER = ["Requirements", "Development", "Deployment", "Testing"];
+
+export function EmployeeUpdateForm({ project, groupedChecklists }: { project: any, groupedChecklists: Record<string, any[]> }) {
+  const submitWithId = submitEmployeeUpdate.bind(null, project.id);
   const [state, formAction, isPending] = useActionState(submitWithId, null);
 
   if (state?.success) {
@@ -36,7 +38,7 @@ export function EmployeeUpdateForm({ projectId, groupedChecklists, assignedTo }:
             type="text" 
             id="employee_name"
             name="employee_name" 
-            defaultValue={assignedTo || ''}
+            defaultValue={project.assigned_to || ''}
             required 
             placeholder="John Doe"
           />
@@ -45,7 +47,10 @@ export function EmployeeUpdateForm({ projectId, groupedChecklists, assignedTo }:
         <div className="mb-8">
           <h3 className="text-[15px] font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Pending Tasks</h3>
           <div className="grid gap-5">
-            {Object.entries(groupedChecklists).map(([category, tasks]) => {
+            {CATEGORY_ORDER.map(category => {
+              const tasks = groupedChecklists[category];
+              if (!tasks) return null;
+              
               const pendingTasks = tasks.filter(t => !t.completed);
               if (pendingTasks.length === 0) return null;
 
@@ -69,6 +74,24 @@ export function EmployeeUpdateForm({ projectId, groupedChecklists, assignedTo }:
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-[15px] font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Project Links (Optional)</h3>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="github_url">GitHub Repository</Label>
+              <Input type="url" id="github_url" name="github_url" defaultValue={project.github_url || ''} placeholder="https://github.com/..." />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="preview_url">Vercel / Test Link</Label>
+              <Input type="url" id="preview_url" name="preview_url" defaultValue={project.preview_url || ''} placeholder="https://..." />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="live_url">Live Domain</Label>
+              <Input type="url" id="live_url" name="live_url" defaultValue={project.live_url || ''} placeholder="https://..." />
+            </div>
           </div>
         </div>
 

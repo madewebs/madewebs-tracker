@@ -106,7 +106,7 @@ export default async function DashboardPage() {
       )}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-7">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-7">
         <StatCard label="Active Projects" value={activeProjects.length} icon={Folder} color="#078FCD" />
         <StatCard label="Completed" value={completedProjects.length} icon={CheckCircle} color="#22c55e" />
         <StatCard label="Revenue" value={fmtCurrency(revenue)} icon={CreditCard} color="#8b5cf6" />
@@ -132,12 +132,12 @@ export default async function DashboardPage() {
               {upcomingDeadlines.map(p => {
                 const d = daysUntil(p.deadline);
                 return (
-                  <Link href={`/projects/${p.id}`} key={p.id} className="flex justify-between items-center py-2.5 border-b border-gray-100 hover:bg-gray-50 -mx-2 px-2 rounded-md transition-colors">
-                    <div>
-                      <div className="text-[13px] font-semibold text-gray-900">{p.company_name}</div>
-                      <div className="text-xs text-gray-400">{new Date(p.deadline).toLocaleDateString()}</div>
+                  <Link href={`/projects/${p.id}`} key={p.id} className="flex justify-between items-start sm:items-center py-2.5 border-b border-gray-100 hover:bg-gray-50 -mx-2 px-2 rounded-md transition-colors gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-gray-900 truncate">{p.company_name}</div>
+                      <div className="text-xs text-gray-400">{new Date(p.deadline).toLocaleDateString('en-GB')}</div>
                     </div>
-                    <span className={`text-xs font-semibold ${d <= 3 ? 'text-red-500' : d <= 7 ? 'text-orange-500' : 'text-green-500'}`}>
+                    <span className={`text-xs font-semibold shrink-0 ${d <= 3 ? 'text-red-500' : d <= 7 ? 'text-orange-500' : 'text-green-500'}`}>
                       {d <= 0 ? "Overdue" : `${d}d`}
                     </span>
                   </Link>
@@ -160,12 +160,12 @@ export default async function DashboardPage() {
                 {pendingList.map(p => {
                   const pPending = (p.project_value || 0) - ((p.advance_received || 0) + (p.final_payment_received || 0));
                   return (
-                    <div key={p.id} className="flex justify-between items-center py-2.5 border-b border-gray-100">
-                      <div>
-                        <div className="text-[13px] font-semibold text-gray-900">{p.company_name}</div>
+                    <div key={p.id} className="flex justify-between items-start sm:items-center py-2.5 border-b border-gray-100 gap-2">
+                      <div className="min-w-0">
+                        <div className="text-[13px] font-semibold text-gray-900 truncate">{p.company_name}</div>
                         <div className="text-xs text-gray-400">Value: {fmtCurrency(p.project_value)}</div>
                       </div>
-                      <span className="text-[13px] font-bold text-orange-500">{fmtCurrency(pPending)}</span>
+                      <span className="text-[13px] font-bold text-orange-500 shrink-0">{fmtCurrency(pPending)}</span>
                     </div>
                   );
                 })}
@@ -182,12 +182,12 @@ export default async function DashboardPage() {
           {pendingReview.length === 0 ? <p className="text-gray-400 text-[13px]">No projects awaiting review.</p> :
             <div className="flex flex-col">
               {pendingReview.map(p => (
-                <Link href={`/projects/${p.id}`} key={p.id} className="flex justify-between items-center py-2.5 border-b border-gray-100 hover:bg-gray-50 -mx-2 px-2 rounded-md transition-colors">
-                  <div>
-                    <div className="text-[13px] font-semibold text-gray-900">{p.company_name}</div>
-                    <div className="text-xs text-gray-400">{p.assigned_to}</div>
+                <Link href={`/projects/${p.id}`} key={p.id} className="flex justify-between items-start sm:items-center py-2.5 border-b border-gray-100 hover:bg-gray-50 -mx-2 px-2 rounded-md transition-colors gap-2">
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-semibold text-gray-900 truncate">{p.company_name}</div>
+                    <div className="text-xs text-gray-400 truncate">{p.assigned_to}</div>
                   </div>
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-600 border border-pink-200">
+                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-600 border border-pink-200 shrink-0">
                     Review
                   </span>
                 </Link>
@@ -206,12 +206,12 @@ export default async function DashboardPage() {
               {domainRenewals.map(p => {
                 const d = daysUntil(p.renewal_date);
                 return (
-                  <div key={p.id} className="flex justify-between items-center py-2.5 border-b border-gray-100">
-                    <div>
-                      <div className="text-[13px] font-semibold text-gray-900">{p.domain_name}</div>
-                      <div className="text-xs text-gray-400">{p.company_name} · {new Date(p.renewal_date).toLocaleDateString()}</div>
+                  <div key={p.id} className="flex justify-between items-start sm:items-center py-2.5 border-b border-gray-100 gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-semibold text-gray-900 truncate">{p.domain_name}</div>
+                      <div className="text-xs text-gray-400 truncate">{p.company_name} · {new Date(p.renewal_date).toLocaleDateString('en-GB')}</div>
                     </div>
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold border ${d <= 7 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-orange-50 text-orange-600 border-orange-200'}`}>
+                    <span className={`inline-block px-2 py-0.5 shrink-0 rounded-full text-xs font-semibold border ${d <= 7 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-orange-50 text-orange-600 border-orange-200'}`}>
                       {d}d
                     </span>
                   </div>

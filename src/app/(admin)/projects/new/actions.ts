@@ -6,8 +6,8 @@ import { redirect } from 'next/navigation';
 const CHECKLIST_TEMPLATE = {
   Requirements: ["Logo Received", "Content Received", "Images Received", "Business Information Received"],
   Development: ["Homepage Complete", "Internal Pages Complete", "Responsive Design Complete", "Forms Working", "SEO Setup Complete"],
-  Testing: ["Mobile Tested", "Desktop Tested", "Form Tested", "Speed Checked"],
-  Deployment: ["Domain Purchased", "DNS Configured", "SSL Active", "Analytics Setup", "Website Live"]
+  Deployment: ["Domain Purchased", "DNS Configured", "SSL Active", "Analytics Setup", "Website Live"],
+  Testing: ["Mobile Tested", "Desktop Tested", "Form Tested", "Speed Checked"]
 };
 
 export async function createProject(prevState: any, formData: FormData) {

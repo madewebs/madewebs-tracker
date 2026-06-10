@@ -11,7 +11,7 @@ export default async function EmployeeUpdatePage({ params }: { params: Promise<{
     { data: project },
     { data: checklists }
   ] = await Promise.all([
-    supabase.from('projects').select('id, company_name, plan, status, assigned_to').eq('id', id).single(),
+    supabase.from('projects').select('id, company_name, plan, status, assigned_to, github_url, preview_url, live_url').eq('id', id).single(),
     supabase.from('project_checklists').select('*').eq('project_id', id).order('id')
   ]);
 
@@ -39,9 +39,8 @@ export default async function EmployeeUpdatePage({ params }: { params: Promise<{
         </div>
 
         <EmployeeUpdateForm 
-          projectId={project.id} 
+          project={project} 
           groupedChecklists={groupedChecklists} 
-          assignedTo={project.assigned_to} 
         />
         
       </div>

@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import { Home, Folder, DollarSign, Globe, Plus, Menu, ArrowUpRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Home, Folder, DollarSign, Globe, Plus, Menu, ArrowUpRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout } from '@/app/login/actions';
 
@@ -14,14 +14,27 @@ const NAV = [
   { id: '/projects/new', icon: Plus, label: 'New Project' },
 ];
 
-export function Sidebar() {
+export function Sidebar({ 
+  mobileMenuOpen = false, 
+  setMobileMenuOpen = () => {} 
+}: { 
+  mobileMenuOpen?: boolean;
+  setMobileMenuOpen?: (v: boolean) => void;
+}) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname, setMobileMenuOpen]);
+
   return (
     <div className={cn(
-      "bg-slate-900 flex flex-col h-screen sticky top-0 left-0 z-50 transition-all duration-250 ease-in-out overflow-hidden border-r border-slate-800",
-      collapsed ? "w-16" : "w-[230px]"
+      "bg-slate-900 flex flex-col h-[100dvh] fixed md:sticky top-0 left-0 z-50 transition-transform duration-300 ease-in-out border-r border-slate-800 shrink-0",
+      collapsed ? "md:w-16" : "md:w-[230px]",
+      "w-[260px]", // Fixed width on mobile
+      mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
     )}>
       <div className="p-4 border-b border-white/10 flex items-center gap-2.5">
         <div className="w-[34px] h-[34px] bg-primary rounded-lg shrink-0 flex items-center justify-center shadow-sm">
@@ -36,13 +49,20 @@ export function Sidebar() {
         )}
         
         <button 
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => {
+            if (window.innerWidth < 768) {
+              setMobileMenuOpen(false);
+            } else {
+              setCollapsed(!collapsed);
+            }
+          }}
           className={cn(
             "text-slate-400 hover:text-white transition-colors p-1 shrink-0 bg-transparent border-none cursor-pointer",
-            collapsed && "mx-auto"
+            collapsed && "mx-auto hidden md:block"
           )}
         >
-          <Menu className="w-5 h-5" />
+          <span className="md:hidden"><X className="w-5 h-5" /></span>
+          <span className="hidden md:block"><Menu className="w-5 h-5" /></span>
         </button>
       </div>
 
@@ -64,30 +84,30 @@ export function Sidebar() {
                 )}
                 title={collapsed ? n.label : undefined}
               >
-                <Icon className={cn("shrink-0", collapsed ? "w-[18px] h-[18px] mx-auto" : "w-4 h-4")} />
-                {!collapsed && <span>{n.label}</span>}
+                <Icon className={cn("shrink-0", (collapsed && !mobileMenuOpen) ? "w-[18px] h-[18px] mx-auto md:block hidden" : "w-4 h-4", mobileMenuOpen && "w-4 h-4 mx-0 block")} />
+                {(!collapsed || mobileMenuOpen) && <span>{n.label}</span>}
               </Link>
             );
           })}
         </div>
       </nav>
 
-      <div className="p-4 border-t border-white/10">
-        {!collapsed ? (
+      <div className="p-4 border-t border-white/10 mt-auto">
+        {(!collapsed || mobileMenuOpen) ? (
           <>
             <div className="text-[11px] text-slate-500 mb-0.5">Logged in as</div>
             <div className="text-xs text-slate-400 font-medium truncate mb-3">admin@madewebs.com</div>
             <button 
               onClick={() => logout()}
-              className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer text-left"
+              className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer text-left w-full flex items-center gap-2"
             >
-              Sign out
+              <ArrowUpRight className="w-4 h-4 rotate-90" /> Sign out
             </button>
           </>
         ) : (
           <button 
             onClick={() => logout()}
-            className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer w-full flex justify-center"
+            className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer w-full flex justify-center hidden md:flex"
             title="Sign out"
           >
             <ArrowUpRight className="w-4 h-4 rotate-90" />

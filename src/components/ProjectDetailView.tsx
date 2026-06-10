@@ -3,10 +3,12 @@
 import { useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { CircleProgress } from '@/components/CircleProgress';
-import { ArrowLeft, Copy, CheckCircle2, DollarSign, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Copy, CheckCircle2, DollarSign, Link as LinkIcon, MessageSquare, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
-const STATUSES = ["Requirements", "Development", "Testing", "Review", "Deployment", "Completed"];
+const STATUSES = ["Requirements", "Development", "Deployment", "Testing", "Review", "Completed"];
+const CATEGORY_ORDER = ["Requirements", "Development", "Deployment", "Testing"];
 
 function statusColor(s: string) {
   const map: Record<string, string> = {
@@ -29,6 +31,7 @@ export function ProjectDetailView({
   const [checklists, setChecklists] = useState(initialChecklists);
   const [activeTab, setActiveTab] = useState('checklist');
   const [isEditingStatus, setIsEditingStatus] = useState(false);
+  const router = useRouter();
   
   // Calculate progress
   const totalTasks = checklists.length;
@@ -54,15 +57,45 @@ export function ProjectDetailView({
   // Handlers
   const handleToggleTask = async (id: string, currentStatus: boolean) => {
     const newStatus = !currentStatus;
+    const newChecklists = checklists.map(c => c.id === id ? { ...c, completed: newStatus } : c);
     
-    // Optimistic update
-    setChecklists(prev => prev.map(c => c.id === id ? { ...c, completed: newStatus } : c));
+    // Optimistic update for checklist
+    setChecklists(newChecklists);
+
+    // Calculate automatic status
+    const getGroup = (cat: string) => newChecklists.filter(c => c.category === cat);
+    const isDone = (tasks: any[]) => tasks.length > 0 && tasks.every(t => t.completed);
     
-    // Supabase update
+    const req = getGroup('Requirements');
+    const dev = getGroup('Development');
+    const test = getGroup('Testing');
+    const dep = getGroup('Deployment');
+
+    let autoStatus = project.status;
+    if (!isDone(req)) {
+      autoStatus = 'Requirements';
+    } else if (!isDone(dev)) {
+      autoStatus = 'Development';
+    } else if (!isDone(dep)) {
+      autoStatus = 'Deployment';
+    } else if (!isDone(test)) {
+      const testCompletedCount = test.filter(t => t.completed).length;
+      autoStatus = testCompletedCount === 0 ? 'Review' : 'Testing';
+    } else {
+      autoStatus = 'Completed';
+    }
+    
+    // Supabase update for checklist
     await supabase
       .from('project_checklists')
       .update({ completed: newStatus, completed_at: newStatus ? new Date().toISOString() : null })
       .eq('id', id);
+
+    // Update project status if it changed
+    if (autoStatus !== project.status) {
+      setProject((prev: any) => ({ ...prev, status: autoStatus }));
+      await supabase.from('projects').update({ status: autoStatus }).eq('id', project.id);
+    }
   };
 
   const handleUpdateField = async (field: string, value: any) => {
@@ -82,15 +115,34 @@ export function ProjectDetailView({
     alert("Employee link copied to clipboard!");
   };
 
+  const handleDelete = async () => {
+    if (confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+      const { error } = await supabase.from('projects').delete().eq('id', project.id);
+      if (error) {
+        alert("Failed to delete project: " + error.message);
+      } else {
+        router.push('/projects');
+      }
+    }
+  };
+
   return (
     <div className="max-w-[900px]">
-      <Link href="/projects" className="inline-flex items-center gap-2 text-primary text-sm font-semibold mb-5 hover:underline">
-        <ArrowLeft className="w-4 h-4" /> Back to Projects
-      </Link>
+      <div className="flex justify-between items-center mb-5">
+        <Link href="/projects" className="inline-flex items-center gap-2 text-primary text-sm font-semibold hover:underline">
+          <ArrowLeft className="w-4 h-4" /> Back to Projects
+        </Link>
+        <button 
+          onClick={handleDelete}
+          className="inline-flex items-center gap-2 text-red-500 text-sm font-semibold hover:text-red-700 transition-colors bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg border border-red-200"
+        >
+          <Trash2 className="w-4 h-4" /> Delete Project
+        </button>
+      </div>
 
       {/* Header */}
       <div className="bg-white border border-gray-200 rounded-[16px] p-6 mb-6 shadow-sm flex flex-col md:flex-row items-start gap-6">
-        <div className="shrink-0">
+        <div className="shrink-0 mx-auto md:mx-0">
           <CircleProgress pct={pct} size={110} stroke={9} />
         </div>
         
@@ -130,7 +182,7 @@ export function ProjectDetailView({
             {[
               { label: "Contact", value: project.contact_person },
               { label: "Assigned", value: project.assigned_to },
-              { label: "Deadline", value: project.deadline ? new Date(project.deadline).toLocaleDateString() : '—' },
+              { label: "Deadline", value: project.deadline ? new Date(project.deadline).toLocaleDateString('en-GB') : '—' },
               { label: "Phone", value: project.phone },
               { label: "Email", value: project.email },
               { label: "Website", value: project.website },
@@ -142,9 +194,9 @@ export function ProjectDetailView({
             ))}
           </div>
 
-          <div className="mt-5 bg-blue-50 border border-blue-100 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 overflow-hidden">
+          <div className="mt-5 bg-blue-50 border border-blue-100 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3 overflow-hidden">
             <span className="text-[13px] text-blue-800 font-medium shrink-0">🔗 Employee Link:</span>
-            <div className="flex items-center gap-2 w-full sm:w-auto min-w-0 flex-1">
+            <div className="flex items-center gap-2 w-full flex-1">
               <code className="text-xs text-blue-800 bg-white border border-blue-100 rounded px-2 py-1.5 truncate flex-1 block">
                 /update/{project.id}
               </code>
@@ -160,7 +212,7 @@ export function ProjectDetailView({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 border-b border-gray-200 overflow-x-auto">
+      <div className="flex gap-1 mb-5 border-b border-gray-200 overflow-x-auto pb-1 scrollbar-hide">
         {[
           { id: 'checklist', label: 'Checklist', icon: CheckCircle2 },
           { id: 'finance', label: 'Finance', icon: DollarSign },
@@ -189,7 +241,10 @@ export function ProjectDetailView({
         {/* Checklist Tab */}
         {activeTab === 'checklist' && (
           <div className="grid gap-4">
-            {Object.entries(groupedChecklists).map(([category, tasks]) => {
+            {CATEGORY_ORDER.map(category => {
+              const tasks = groupedChecklists[category];
+              if (!tasks) return null;
+              
               const catDone = tasks.filter(t => t.completed).length;
               const catTotal = tasks.length;
               const catPct = catTotal === 0 ? 0 : (catDone / catTotal) * 100;
@@ -362,7 +417,7 @@ export function ProjectDetailView({
                   <div key={u.id} className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-bold text-sm text-gray-900">{u.employee_name || 'Anonymous'}</span>
-                      <span className="text-xs text-gray-400">{new Date(u.created_at).toLocaleString()}</span>
+                      <span className="text-xs text-gray-400">{new Date(u.created_at).toLocaleString('en-GB')}</span>
                     </div>
                     <p className="text-sm text-gray-700 whitespace-pre-wrap">{u.note}</p>
                     {u.screenshot_url && (
